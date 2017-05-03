@@ -1,3 +1,21 @@
+const LEFT = 0;
+const FRONT = 1;
+const RIGHT = 2;
+const BACK = 3;
+
+/**
+ * Returns the identifier of a rotation:
+ * - 0: Left
+ * - 1: Front
+ * - 2: Back
+ * - 3: Right
+ * @param {number} rotation
+ * @returns {number}
+ */
+function getRotationStep(rotation) {
+    return Math.floor(rotation / (Math.PI/2)) % 4;
+}
+
 /***********************************************************************************************************************
  * Js3dColorBlender
  **********************************************************************************************************************/
@@ -166,7 +184,7 @@ Js3dCanvas.prototype.render = function() {
     if (this.debug) {
         this.context.fillStyle = '#ccc';
         this.context.font = "30px Arial";
-        var display = Math.floor(this.rotation/(Math.PI * 2) * 4);
+        var display = getRotationStep(this.rotation);
         this.context.fillText('PI:' + display, 400, 50);
         this._drawLine([this._getPosition({x: 0, y: 0, z: 0}), this._getPosition({x: 10, y: 0, z: 0})], '#ccc');
         this._drawLine([this._getPosition({x: 0, y: 0, z: 0}), this._getPosition({x: 0, y: 10, z: 0})], '#ccc');
@@ -196,16 +214,17 @@ Js3dCanvas.prototype._drawCube = function(cube) {
         this._getPosition({x: cube.x, y: cube.y + 1, z: cube.z + 1}),
         this._getPosition({x: cube.x, y: cube.y, z: cube.z + 1})
     ];
-    if (this.rotation <= Math.PI) {
+    var rotationStep = getRotationStep(this.rotation);
+    if (rotationStep === LEFT || rotationStep === FRONT) {
         this._drawPoly([points[1], points[2], points[6], points[5]], cube.colors.front);
     }
-    if (this.rotation >= Math.PI/2 && this.rotation <= Math.PI/2 * 3) {
+    if (rotationStep === FRONT || rotationStep === RIGHT) {
         this._drawPoly([points[0], points[1], points[5], points[4]], cube.colors.left);
     }
-    if (this.rotation >= Math.PI) {
+    if (rotationStep === RIGHT || rotationStep === BACK) {
         this._drawPoly([points[3], points[0], points[4], points[7]], cube.colors.back);
     }
-    if (this.rotation >= Math.PI/2 * 3 || this.rotation <= Math.PI/2) {
+    if (rotationStep === BACK || rotationStep === LEFT) {
         this._drawPoly([points[3], points[2], points[6], points[7]], cube.colors.right);
     }
     this._drawPoly([points[0], points[1], points[2], points[3]], cube.colors.top);
@@ -268,17 +287,24 @@ Js3dCanvas.prototype._drawLine = function(ary, color) {
  */
 Js3dCanvas.prototype._sortCubes = function() {
     this.cubes.sort(function(cub1, cub2) {
-        var matrix = {x: this.maxBounds * this.maxBounds, y: -this.maxBounds, z: this.maxBounds * this.maxBounds * this.maxBounds};
-        if (this.rotation < Math.PI/2) {
-            matrix = {x: -this.maxBounds, y: -this.maxBounds * this.maxBounds, z: this.maxBounds * this.maxBounds * this.maxBounds};
-        } else if (this.rotation < Math.PI/2 * 2) {
-            matrix = {x: -this.maxBounds * this.maxBounds, y: this.maxBounds, z: this.maxBounds * this.maxBounds * this.maxBounds};
-        } else if (this.rotation < Math.PI/2 * 3) {
-            matrix = {x: this.maxBounds, y: this.maxBounds * this.maxBounds, z: this.maxBounds * this.maxBounds * this.maxBounds};
+        switch(getRotationStep(this.rotation)) {
+            case LEFT:
+                matrix = {xP: 1, xO: -1, yP: 2, yO: -1, zP: 3, zO: +1};
+            break;
+            case FRONT:
+                matrix = {xP: 2, xO: -1, yP: 1, yO: +1, zP: 3, zO: +1};
+            break;
+            case RIGHT:
+                matrix = {xP: 1, xO: +1, yP: 2, yO: +1, zP: 3, zO: +1};
+            break;
+            default:
+                matrix = {xP: 2, xO: +1, yP: 1, yO: -1, zP: 3, zO: +1};
         }
-        return (cub2.x - cub1.x) * matrix.x
-            + (cub2.y - cub1.y) * matrix.y
-            + (cub2.z - cub1.z) * matrix.z
+        // xP = power of the x axis
+        // xO = orientation of the x axis
+        return (cub2.x - cub1.x) * matrix.xO * Math.pow(this.maxBounds, matrix.xP)
+            + (cub2.y - cub1.y) * matrix.yO * Math.pow(this.maxBounds, matrix.yP)
+            + (cub2.z - cub1.z) * matrix.zO * Math.pow(this.maxBounds, matrix.zP)
     }.bind(this));
 };
 
