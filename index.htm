@@ -1,0 +1,99 @@
+<html>
+<head>
+  <script type="text/javascript" src="js3dpix.js"></script>
+</head>
+<body>
+<canvas id="c" width="800" height="600"></canvas>
+
+<script type="text/javascript">
+  var canvas = new Js3dCanvas({
+      identifier: 'c',
+      debug: false,
+      cubeSize: 50,
+  });
+
+  var pico8palette = ['#000000', '#20337b', '#7e2553', '#008331', '#ab5236', '#454545', '#c2c3c7', '#fff1e8', '#ff004d', '#ffa300', '#ffe727', '#00e232', '#29adff', '#83769c', '#ff77a8', '#ffccaa'];
+
+  function generateCubes(type) {
+      switch(type) {
+          case 0:
+              var limit = 30;
+              var sphere = 2.1;
+              for (var i = 0; i < 10000; i++) {
+                  var x = Math.round(Math.random() * limit) - limit / 2;
+                  var y = Math.round(Math.random() * limit) - limit / 2;
+                  var z = Math.round(Math.random() * limit) - limit / 2;
+                  var found = Math.sqrt(x * x + y * y + z * z) < sphere;
+                  while (!found) {
+                      x = Math.round(Math.random() * limit) - limit / 2;
+                      y = Math.round(Math.random() * limit) - limit / 2;
+                      z = Math.round(Math.random() * limit) - limit / 2;
+                      found = Math.sqrt(x * x + y * y + z * z) < sphere;
+                  }
+                  var display = true;
+                  for (var j = 0; j < canvas.cubes.length; j++) {
+                      if ((canvas.cubes[j].x === x) && (canvas.cubes[j].y === y) && (canvas.cubes[j].z === z)) {
+                          display = false;
+                      }
+                  }
+                  if (display) {
+                      canvas.addCube(
+                          new Js3dCube(pico8palette[parseInt(Math.random() * pico8palette.length)], x, y, z)
+                      );
+                  }
+              }
+              break;
+          case 1:
+              var limit = 5;
+              var colors = [
+                  pico8palette[parseInt(Math.random() * pico8palette.length)],
+                  pico8palette[parseInt(Math.random() * pico8palette.length)]
+              ];
+              for (var i = -limit; i <= limit; i++) {
+                  for (var j = -limit; j <= limit; j++) {
+                      for (var z = -limit; z <= limit; z++) {
+                          canvas.addCube(new Js3dCube(((i + j + z) % 2 === 0) ? colors[0] : colors[1], i, j, z));
+                      }
+                  }
+              }
+              break;
+          case 2:
+              var limit = 5;
+              for (var i = -limit + 1; i < limit; i++) {
+                  canvas.addCube(new Js3dCube('#faaffa', -limit, -limit, i));
+              }
+              for (var i = -limit + 1; i < limit; i++) {
+                  canvas.addCube(new Js3dCube('#faaffa', -limit, i, -limit));
+              }
+              for (var i = -limit + 1; i < limit; i++) {
+                  canvas.addCube(new Js3dCube('#faaffa', i, -limit, -limit));
+              }
+              for (var i = -limit + 1; i < limit; i++) {
+                  canvas.addCube(new Js3dCube('#faaffa', limit, limit, i));
+              }
+              for (var i = -limit + 1; i < limit; i++) {
+                  canvas.addCube(new Js3dCube('#faaffa', limit, i, limit));
+              }
+              for (var i = -limit + 1; i < limit; i++) {
+                  canvas.addCube(new Js3dCube('#faaffa', i, limit, limit));
+              }
+              break;
+      }
+  }
+
+  generateCubes(0);
+
+  canvas.render();
+
+  window.setInterval(function () {
+    canvas.rotation += 0.005;
+    canvas.rotation = canvas.rotation % (Math.PI * 2);
+    canvas.render();
+  }, 25);
+
+
+</script>
+
+
+</body>
+</html>
