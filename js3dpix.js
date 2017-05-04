@@ -110,6 +110,11 @@ Js3dCube.prototype._cacheColors = function(colorBlender, shadeFaces, shadeBorder
     }
 };
 
+Js3dCube.prototype.setColor = function(color) {
+    this.color = color;
+    delete this.colors;
+};
+
 
 /***********************************************************************************************************************
  * Js3dCanvas
@@ -166,11 +171,19 @@ function Js3dCanvas(options) {
  * @param cube {Js3dCube}
  */
 Js3dCanvas.prototype.addCube = function (cube) {
-    if (undefined === cube.colors) {
-        cube._cacheColors(this.colorBlender, this.shadeFaces, this.shadeBorders);
-    }
-
     this.cubes.push(cube);
+    console.log(cube.color);
+};
+
+Js3dCanvas.prototype.removeCube = function (x, y, z) {
+    for (var i = 0; i < this.cubes.length; i++) {
+        var cube = this.cubes[i];
+        if (cube.x === x && cube.y === y && cube.z === z) {
+            this.cubes.splice(i, 1);
+
+            return;
+        }
+    }
 };
 
 /**
@@ -195,6 +208,24 @@ Js3dCanvas.prototype.render = function() {
     }
 };
 
+/**
+ * Get the cube at the current position, null if there is no cube.
+ *
+ * @param {number} x
+ * @param {number} y
+ * @param {number} z
+ * @returns {Js3dCube|null}
+ */
+Js3dCanvas.prototype.getCube = function(x, y, z) {
+    for (var i = 0; i < this.cubes.length; i++) {
+        var cube = this.cubes[i];
+        if (cube.x === x && cube.y === y && cube.z === z) {
+            return cube;
+        }
+    }
+
+    return null;
+};
 
 /**
  * Draws a single cube
@@ -203,6 +234,10 @@ Js3dCanvas.prototype.render = function() {
  * @private
  */
 Js3dCanvas.prototype._drawCube = function(cube) {
+    if (undefined === cube.colors) {
+        cube._cacheColors(this.colorBlender, this.shadeFaces, this.shadeBorders);
+    }
+
     var points = [
         this._getPosition(cube),
         this._getPosition({x: cube.x + 1, y: cube.y, z: cube.z}),
