@@ -2,6 +2,11 @@ const LEFT = 0;
 const FRONT = 1;
 const RIGHT = 2;
 const BACK = 3;
+const TOP = 4;
+
+const SHADOWS_NOT = 0;
+const SHADOWS_TOP = 1;
+const SHADOWS_45 = 2;
 
 /**
  * Returns the identifier of a rotation:
@@ -56,7 +61,7 @@ Js3dColorBlender.prototype._shadeBlend = function(p, c0, c1) {
  *
  * @param p {float} The ratio used for computation
  * @param c0 {string} First color (use rgb(x,x,x) or #abcdef notation)
- * @param c1 {string} Second color (use rgb(x,x,x) or #abcdef notation)
+ * @param [c1] {string} Second color (use rgb(x,x,x) or #abcdef notation)
  * @returns {string}
  */
 Js3dColorBlender.prototype.cachedShadeBlend = function (p, c0, c1) {
@@ -89,6 +94,7 @@ function Js3dCube(color, x, y, z) {
     this.x = x;
     this.y = y;
     this.z = z;
+    this.shadows = [];
 };
 
 /**
@@ -109,12 +115,26 @@ Js3dCube.prototype._cacheColors = function(colorBlender, shadeFaces, shadeBorder
         line: colorBlender.cachedShadeBlend(shadeBorders.topFront, this.color),
     };
     this.colors.topShadowed = colorBlender.cachedShadeBlend(shadeFaces.shadow, this.colors.top);
+    this.colors.frontShadowed = colorBlender.cachedShadeBlend(shadeFaces.shadow, this.colors.front);
     this.colors.lineShadowed = colorBlender.cachedShadeBlend(shadeFaces.shadow, this.colors.line);
 };
 
+/**
+ * Change the color of the cube
+ * @param {string} color
+ */
 Js3dCube.prototype.setColor = function(color) {
     this.color = color;
     delete this.colors;
+};
+
+/**
+ * Returns if cube is shadowed in a face
+ * @param {number} faceId
+ * @returns {boolean}
+ */
+Js3dCube.prototype.hasShadow = function (faceId) {
+    return this.shadows.indexOf(faceId) >= 0
 };
 
 
@@ -137,7 +157,7 @@ Js3dCube.prototype.setColor = function(color) {
  * @param [options.shadeFaces] {Object} The ratios used for face color computation
  * @param [options.shadeBorders] {Object} The ratios used for line color computation
  * @param [options.debug] {boolean} Show debug information
- * @param [options.shadows] {boolean} Displays shadows
+ * @param [options.shadows] {number} Displays shadows
  *
  * @constructor
  */
@@ -158,13 +178,13 @@ function Js3dCanvas(options) {
         right: -0.3,
         front: -0.05,
         top: 0,
-        shadow: -0.3
+        shadow: -0.2
     };
     this.shadeBorders = options.shadeBorders || {
         topFront: (this.shadeFaces.top + this.shadeFaces.front) / 2 + 0.2
     };
     this.debug = options.debug || false;
-    this.shadows = options.shadows || false;
+    this.shadows = options.shadows || SHADOW_NOT;
 
     this.colorBlender = new Js3dColorBlender();
     this.context = document.getElementById(options.identifier).getContext('2d');
@@ -255,7 +275,11 @@ Js3dCanvas.prototype._drawCube = function(cube) {
     ];
     var rotationStep = getRotationStep(this.rotation);
     if (rotationStep === LEFT || rotationStep === FRONT) {
-        this._drawPoly([points[1], points[2], points[6], points[5]], cube.colors.front);
+        if (cube.hasShadow(FRONT)) {
+            this._drawPoly([points[1], points[2], points[6], points[5]], cube.colors.frontShadowed);
+        } else {
+            this._drawPoly([points[1], points[2], points[6], points[5]], cube.colors.front);
+        }
     }
     if (rotationStep === FRONT || rotationStep === RIGHT) {
         this._drawPoly([points[0], points[1], points[5], points[4]], cube.colors.left);
@@ -266,7 +290,7 @@ Js3dCanvas.prototype._drawCube = function(cube) {
     if (rotationStep === BACK || rotationStep === LEFT) {
         this._drawPoly([points[3], points[2], points[6], points[7]], cube.colors.right);
     }
-    if (this.shadows && cube.shadows) {
+    if (cube.hasShadow(TOP)) {
         this._drawPoly([points[0], points[1], points[2], points[3]], cube.colors.topShadowed);
         this._drawLine([points[2], points[1]], cube.colors.lineShadowed);
     } else {
@@ -354,15 +378,28 @@ Js3dCanvas.prototype._sortCubes = function () {
 
 Js3dCanvas.prototype._computeShadows = function () {
     for (var i = 0; i < this.cubes.length; i++) {
-        this.cubes[i].shadows = false;
+        this.cubes[i].shadows = [];
     }
 
     for (i = 0; i < this.cubes.length; i++) {
         var cube1 = this.cubes[i];
         for (var j = 0; j < this.cubes.length; j++) {
-            var cube2 = this.cubes[j];
-            if (cube1.x === cube2.x && cube1.y === cube2.y && cube1.z < cube2.z) {
-                cube2.shadows = true;
+            if (i !== j) {
+                var cube2 = this.cubes[j];
+
+                switch (this.shadows) {
+                    case SHADOWS_TOP:
+                        if (cube1.x === cube2.x && cube1.y === cube2.y && cube1.z < cube2.z) {
+                            cube2.shadows.push(TOP);
+                        }
+                        break;
+                    case SHADOWS_45:
+                        if (cube1.y === cube2.y && cube1.z < cube2.z && cube1.x - cube2.x === cube2.z - cube1.z) {
+                            cube2.shadows.push(TOP, FRONT);
+                        }
+                        break;
+                    default:
+                }
             }
         }
     }
@@ -403,7 +440,7 @@ Js3dCanvas.prototype._getPosition = function(pos) {
 Js3dCanvas.prototype._drawCubes = function() {
     this._sortCubes();
 
-    if (this.shadows) {
+    if (this.shadows !== SHADOWS_NOT) {
         this._computeShadows();
     }
 

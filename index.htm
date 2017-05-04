@@ -53,7 +53,7 @@
       debug: false,
       cubeSize: 35,
       rotation: Math.PI/4,
-      shadows: true,
+      shadows: SHADOWS_45,
   });
   
   var pico8palette = ['#000000', '#20337b', '#7e2553', '#008331', '#ab5236', '#454545', '#c2c3c7', '#fff1e8', '#ff004d', '#ffa300', '#ffe727', '#00e232', '#29adff', '#83769c', '#ff77a8', '#ffccaa'];
@@ -76,6 +76,17 @@
   var sizeX = 9;
   var sizeY = 9;
   var sizeZ = 13;
+
+/*
+   var data =
+       '----------------' +
+       '------E---------' +
+       '----------------' +
+       'BBBBBBBBBBBBBBBB';
+   var sizeX = 4;
+   var sizeY = 4;
+   var sizeZ = 4;
+*/
 
   if (QueryString.data && QueryString.x && QueryString.y && QueryString.z) {
     data = QueryString.data;
@@ -101,11 +112,11 @@
   canvas.render();
 
   var grids = [];
-  for (var z = 0; z < sizeZ; z++) {
+  for (z = 0; z < sizeZ; z++) {
       var lines = [];
-      for (var y = 0; y < sizeY; y++) {
+      for (y = 0; y < sizeY; y++) {
           var cells = [];
-          for (var x = 0; x < sizeX; x++) {
+          for (x = 0; x < sizeX; x++) {
               var cube = canvas.getCube(x - sizeX/2, y - sizeY/2, z - sizeZ/2);
               var cell = '<div class="cell" data-x="' + (x - sizeX/2) + '" data-y="' + (y - sizeY/2) + '" data-z="' + (z - sizeZ/2) + '" data-color-id="' + getColorIdFromColor(cube ? cube.color : null) + '" style="background-color:' + (cube ? cube.color : '#ffffff') + '" onclick="changeColor(this)"></div>';
               cells.push(cell);
