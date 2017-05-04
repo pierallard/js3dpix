@@ -118,18 +118,18 @@ Js3dCube.prototype._cacheColors = function(colorBlender, shadeFaces, shadeBorder
 /**
  * Creates a new view from a Canvas, able to display cubes
  *
- * @param options The options for rendering
- * @param options.cubes {Js3dCube[]} The set of cubes to render
- * @param options.maxBounds {number} The maximum length to the origin (used for cube sorter)
- * @param options.rotation {number} The rotation of the view, from 0 to Math.PI * 2
- * @param options.origin.x {number} The center of the view in x-axis (generally the middle of the canvas)
- * @param options.origin.y {number} The center of the view in y-axis (generally the middle of the canvas)
- * @param options.crush {number} The crush of the view, from 0 to 1.
- * @param options.cubeSize {number} The size of the cubes
- * @param options.crushZ {number} The ratio of the cube for the Z-axis, from 0 to 1.
- * @param options.shadeFaces {Object} The ratios used for face color computation
- * @param options.shadeBorders {Object} The ratios used for line color computation
- * @param options.debug {boolean} Show debug information
+ * @param {Object} options The options for rendering
+ * @param [options.cubes] The set of cubes to render
+ * @param [options.maxBounds] {number} The maximum length to the origin (used for cube sorter)
+ * @param [options.rotation] {number} The rotation of the view, from 0 to Math.PI * 2
+ * @param [options.origin.x] {number} The center of the view in x-axis (generally the middle of the canvas)
+ * @param [options.origin.y] {number} The center of the view in y-axis (generally the middle of the canvas)
+ * @param [options.crush] {number} The crush of the view, from 0 to 1.
+ * @param [options.cubeSize] {number} The size of the cubes
+ * @param [options.crushZ] {number} The ratio of the cube for the Z-axis, from 0 to 1.
+ * @param [options.shadeFaces] {Object} The ratios used for face color computation
+ * @param [options.shadeBorders] {Object} The ratios used for line color computation
+ * @param [options.debug] {boolean} Show debug information
  *
  * @constructor
  */

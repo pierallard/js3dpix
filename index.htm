@@ -1,10 +1,10 @@
 <html>
 <head>
   <script type="text/javascript" src="js3dpix.js"></script>
+  <script type="text/javascript" src="query_string.js"></script>
 </head>
 <body>
 <canvas id="c" width="800" height="600"></canvas>
-
 <script type="text/javascript">
   var canvas = new Js3dCanvas({
       identifier: 'c',
@@ -12,33 +12,42 @@
       cubeSize: 50,
       rotation: Math.PI/4,
   });
-
+  
   var pico8palette = ['#000000', '#20337b', '#7e2553', '#008331', '#ab5236', '#454545', '#c2c3c7', '#fff1e8', '#ff004d', '#ffa300', '#ffe727', '#00e232', '#29adff', '#83769c', '#ff77a8', '#ffccaa'];
 
   var data =
-      "            6            " +
-      "       6   666   6       " +
-      "      666  666  666      " +
-      "      6D6  D6D  6D6      " +
-      "      666  666  666      " +
-      "      6D6  D6D  6D6      " +
-      "      666  666  666      " +
-      "  C   666 C666C 666   C  " +
-      "  C   666 C666C 666   C  " +
-      "  C    C  CC CC  C    C  " +
-      "  C       C   C       C  " +
-      "  C       C   C       C  " +
+      "------------6------------" +
+      "-------6---666---6-------" +
+      "------666--666--666------" +
+      "------6D6--D6D--6D6------" +
+      "------666--666--666------" +
+      "------6D6--D6D--6D6------" +
+      "------666--666--666------" +
+      "--C---666-C666C-666---C--" +
+      "--C---666-C666C-666---C--" +
+      "--C----C--CC-CC--C----C--" +
+      "--C-------C---C-------C--" +
+      "--C-------C---C-------C--" +
       "BBBBBBBBBBBBBBBBBBBBBBBBB";
 
   var sizeX = 5;
   var sizeY = 5;
   var sizeZ = 13;
 
+  if (QueryString.data && QueryString.x && QueryString.y && QueryString.z) {
+    data = QueryString.data;
+    sizeX = QueryString.x;
+    sizeY = QueryString.y;
+    sizeZ = QueryString.z;
+  }
+
+  window.history.pushState('', '', generateUrl({x: sizeX, y: sizeY, z: sizeZ, data: data}));
+
   for (var z = 0; z < sizeZ; z++) {
       for (var y = 0; y < sizeY; y++) {
           for (var x = 0; x < sizeX; x++) {
               var letter = data[x + y * sizeY + z * (sizeX * sizeY)];
-              if (undefined !== letter && ' ' !== letter) {
+              if (letter.match(/[0-9A-F]/i)) {
                   var integer = parseInt(letter, 16);
                   canvas.addCube(new Js3dCube(pico8palette[integer], x - sizeX/2, y- sizeY/2, z - sizeZ/2));
               }
@@ -53,10 +62,6 @@
     canvas.rotation = canvas.rotation % (Math.PI * 2);
     canvas.render();
   }, 25);
-
-
 </script>
-
-
 </body>
 </html>
